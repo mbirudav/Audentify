@@ -102,16 +102,16 @@ class FingerprintIdentifier(Identifier):
     def _isrc_for_mbid(self, recording_mbid: str | None) -> str | None:
         """Look up the ISRC for a MusicBrainz recording id. Live-only; on the test path the
         flag is off so we never get here (identify raises first). Returns None on any miss so
-        a failed enrichment never breaks identification."""
+        a failed enrichment never breaks identification.
+
+        Goes through the injected MusicBrainzClient (NOT musicbrainzngs directly) so the
+        client's custom User-Agent + ~1 req/sec rate limit are applied — MusicBrainz etiquette
+        requires both, and routing through the client also keeps this path injectable in tests.
+        """
         if not recording_mbid or not get_settings().allow_live_network:
             return None
         try:
-            import musicbrainzngs
-
-            detail = musicbrainzngs.get_recording_by_id(
-                recording_mbid, includes=["isrcs"]
-            )
-            isrcs = detail.get("recording", {}).get("isrc-list") or []
+            isrcs = self._musicbrainz.isrcs_for_recording_mbid(recording_mbid)
             return isrcs[0] if isrcs else None
         except Exception:
             return None

@@ -150,7 +150,9 @@ def _render_registration_map(gaps) -> None:
         )
     st.dataframe(rows, hide_index=True, use_container_width=True)
 
-    leaks = [r for r in gaps.checks if r.status is RegistrationStatus.NOT_FOUND]
+    # Use the schema's own definition of a candidate leak (NOT_FOUND) so the UI never drifts
+    # from the rest of the system if that rule changes.
+    leaks = gaps.candidate_leaks
     couldnt = [
         r for r in gaps.checks
         if r.status in (RegistrationStatus.UNRESOLVED, RegistrationStatus.ERROR)

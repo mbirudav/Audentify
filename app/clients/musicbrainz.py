@@ -87,3 +87,18 @@ class MusicBrainzClient:
                 works[work_id] = work_detail.get("work", work_detail)
 
         return {"isrc": recordings_result.get("isrc", {}), "works": works}
+
+    def isrcs_for_recording_mbid(self, recording_mbid: str) -> list[str]:
+        """Return the ISRCs MusicBrainz has for a recording MBID (empty list on a miss).
+
+        Used by the fingerprint path to enrich an AcoustID match with an ISRC. Goes through
+        this client (not musicbrainzngs directly) so the same gating + `_configure()` apply —
+        i.e. the custom User-Agent and ~1 req/sec rate limit MusicBrainz etiquette requires.
+        """
+        if not get_settings().allow_live_network:
+            raise RuntimeError("live network disabled; set allow_live_network=True")
+        self._configure()
+        import musicbrainzngs
+
+        detail = musicbrainzngs.get_recording_by_id(recording_mbid, includes=["isrcs"])
+        return detail.get("recording", {}).get("isrc-list") or []

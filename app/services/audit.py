@@ -82,6 +82,13 @@ def run_audit(
                 from app.pipeline.stage1_identity.spotify import SpotifyIdentifier
 
                 identifier = SpotifyIdentifier()
+            elif settings.allow_live_network and track.audio_file_path:
+                # Audio-only input: fingerprint it (live-only — needs the fpcalc binary +
+                # network). Without this branch an audio-only track would fall to the manual
+                # identifier and raise for lack of a title/ISRC.
+                from app.pipeline.stage1_identity.fingerprint import FingerprintIdentifier
+
+                identifier = FingerprintIdentifier()
             else:
                 from app.pipeline.stage1_identity.manual import ManualIdentifier
 
@@ -111,6 +118,11 @@ def run_audit(
                 writers=[],
                 source="manual",
             )
+        elif work is not None and work.iswc is None and request.track.iswc:
+            # The resolver found the work + writers but no ISWC (common — MusicBrainz often
+            # has the work-relation without an ISWC). Backfill the user-supplied ISWC so the
+            # composition checks that key on it aren't deprived of an identifier the user gave us.
+            work = work.model_copy(update={"iswc": request.track.iswc})
 
         identity = IdentityResult(recording=recording, work=work)
 

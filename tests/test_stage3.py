@@ -140,6 +140,32 @@ def test_estimate_band_formula_is_symmetric():
         assert li.high == point * Decimal("1.30")
 
 
+def test_performance_rate_blends_across_pros(session: Session):
+    """PERFORMANCE spans multiple PROs (ASCAP + BMI). The estimate must blend their rates
+    (mean), not arbitrarily pick whichever row was inserted last."""
+    _add_rate(
+        session, royalty_type=RoyaltyType.PERFORMANCE, registry=RegistryName.ASCAP,
+        version="v1", rate="0.0002",
+    )
+    _add_rate(
+        session, royalty_type=RoyaltyType.PERFORMANCE, registry=RegistryName.BMI,
+        version="v1", rate="0.0004",
+    )
+    est = RateCardEstimator(session)
+    result = est.estimate(
+        make_identity(),
+        RoyaltyAssumptions(annual_volume={RoyaltyType.PERFORMANCE: 1_000_000}),
+        gaps=[],
+    )
+    (li,) = result.line_items
+    # Mean of 0.0002 and 0.0004 is 0.0003 -> point = 1,000,000 * 0.0003 = 300.
+    assert Decimal(li.assumptions["rate"]) == Decimal("0.0003")
+    assert li.low == Decimal("300") * Decimal("0.70")
+    assert li.high == Decimal("300") * Decimal("1.30")
+    # Transparent about the blend.
+    assert li.assumptions["rate_blended_across"] == "ascap, bmi"
+
+
 def test_estimate_uses_versioned_rate(session: Session):
     """Two rate versions for the same royalty type. Pinning the version changes the figure
     AND stamps the line item with that version — proving the rate is read from the versioned

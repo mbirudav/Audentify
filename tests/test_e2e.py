@@ -123,6 +123,38 @@ def test_e2e_full_loop_offline(session: Session):
     assert session.is_active
 
 
+def test_e2e_backfills_user_iswc_when_resolver_returns_none(session: Session):
+    """A resolver can return a work WITH writers but NO ISWC (common in MusicBrainz). When the
+    user supplied an ISWC on the TrackInput, the orchestrator must backfill it onto the
+    resolved work (without dropping the writers) so composition checks keep an identifier."""
+    from app.schemas.identity import WorkResult
+    from tests.factories import make_party
+
+    class _ResolverNoISWC:
+        source = "musicbrainz"
+
+        def resolve_work(self, recording):
+            return WorkResult(
+                title=recording.title, iswc=None, writers=[make_party()], source="musicbrainz"
+            )
+
+    request = AuditRequest(
+        track=TrackInput(title=_TITLE, isrc=_ISRC, iswc=_ISWC),
+        assumptions=_assumptions(),
+    )
+    response = run_audit(
+        request,
+        work_resolver=_ResolverNoISWC(),
+        checkers=[],  # no gap checks needed for this assertion
+        estimator=RateCardEstimator(session),
+        session=session,
+    )
+
+    assert response.identity.work is not None
+    assert response.identity.work.iswc == _ISWC  # backfilled from the TrackInput
+    assert response.identity.work.writers  # the resolver's writers were preserved
+
+
 def test_e2e_no_work_yields_unresolved_composition_checks(session: Session):
     """Without an ISWC the work can't be resolved offline, so a composition adapter must
     degrade to UNRESOLVED (never NOT_FOUND) — we never assert a gap we couldn't check."""

@@ -39,7 +39,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import RateCard
-from app.domain import REGISTRY_ROYALTY, RegistrationStatus, RoyaltyType
+from app.domain import REGISTRY_ROYALTY, RegistrationStatus, RegistryName, RoyaltyType
 from app.pipeline.interfaces import Estimator
 from app.schemas.estimate import EstimateResult, RoyaltyAssumptions, RoyaltyLineItem
 from app.schemas.gaps import RegistrationResult
@@ -57,23 +57,32 @@ class RateCardEstimator(Estimator):
 
     # --- rate lookup -------------------------------------------------------------------
 
-    def _lookup_rate(
+    def _applicable_rate_rows(
         self, royalty_type: RoyaltyType, rate_version: str | None
-    ) -> RateCard | None:
-        """Return the applicable RateCard row for a royalty type from the TABLE.
+    ) -> list[RateCard]:
+        """Return the applicable RateCard rows for a royalty type — the latest-effective row
+        PER registry — read from the TABLE.
 
-        Pinned: the row whose `version` == rate_version (latest effective_date if a version
-        was reissued). Unpinned: the latest row with effective_date <= today. Returns None if
-        no rate is seeded for this royalty type (caller skips it rather than inventing one).
+        A royalty type can span multiple registries (PERFORMANCE = ASCAP + BMI), so we return
+        one row per registry rather than arbitrarily picking a single one; the caller blends
+        them (mean rate) so the estimate reflects all the relevant collectors, not whichever
+        seed row happened to be inserted last. Pinned: rows whose `version` == rate_version.
+        Unpinned: rows with effective_date <= today. Empty list if nothing is seeded (the
+        caller skips that type rather than inventing a number).
         """
         stmt = select(RateCard).where(RateCard.royalty_type == royalty_type)
         if rate_version is not None:
             stmt = stmt.where(RateCard.version == rate_version)
         else:
             stmt = stmt.where(RateCard.effective_date <= dt.date.today())
-        # Newest effective rate first; id as a stable tiebreaker.
-        stmt = stmt.order_by(RateCard.effective_date.desc(), RateCard.id.desc()).limit(1)
-        return self._session.scalars(stmt).first()
+        # Newest effective rate first; id as a stable tiebreaker. Keep the first row seen per
+        # registry (registry None — a statutory/registry-agnostic rate — is a valid key).
+        stmt = stmt.order_by(RateCard.effective_date.desc(), RateCard.id.desc())
+        latest_by_registry: dict[RegistryName | None, RateCard] = {}
+        for row in self._session.scalars(stmt):
+            if row.registry not in latest_by_registry:
+                latest_by_registry[row.registry] = row
+        return list(latest_by_registry.values())
 
     # --- gap -> royalty-type status aggregation ----------------------------------------
 
@@ -126,13 +135,19 @@ class RateCardEstimator(Estimator):
         total_high = Decimal("0")
 
         for royalty_type, volume in assumptions.annual_volume.items():
-            card = self._lookup_rate(royalty_type, assumptions.rate_version)
-            if card is None:
+            rate_rows = self._applicable_rate_rows(royalty_type, assumptions.rate_version)
+            if not rate_rows:
                 # No seeded rate for this type — skip rather than fabricate a number.
                 continue
 
+            # Blend across registries (e.g. ASCAP + BMI for PERFORMANCE): the mean of the
+            # per-registry rates. The most-recent effective row is the representative we stamp
+            # the line item's version/effective_date with (reproducibility).
+            rep = max(rate_rows, key=lambda r: (r.effective_date, r.id))
+            rate = sum((r.rate for r in rate_rows), Decimal("0")) / Decimal(len(rate_rows))
+
             volume_dec = Decimal(str(volume))
-            point = volume_dec * card.rate
+            point = volume_dec * rate
             low = point * (Decimal("1") - self._band)
             high = point * (Decimal("1") + self._band)
 
@@ -149,15 +164,20 @@ class RateCardEstimator(Estimator):
 
             item_assumptions: dict[str, str] = {
                 "annual_volume": str(volume),
-                "volume_unit": card.unit,
-                "rate": str(card.rate),
-                "rate_unit": card.unit,
+                "volume_unit": rep.unit,
+                "rate": str(rate),
+                "rate_unit": rep.unit,
                 "band": str(self._band),
                 "formula": "low/high = volume * rate * (1 -/+ band)",
                 "leak_status": leak_note,
                 "counts_toward_total": str(is_leak),
                 "registration_checked": str(gaps_checked),
             }
+            if len(rate_rows) > 1:
+                # Be transparent that the rate is a blend across collectors for this type.
+                item_assumptions["rate_blended_across"] = ", ".join(
+                    sorted(r.registry.value for r in rate_rows if r.registry is not None)
+                )
             if royalty_type is RoyaltyType.PERFORMANCE:
                 item_assumptions["approximation_note"] = (
                     "PRO performance is a pooled/survey distribution, not per-stream; this "
@@ -169,8 +189,8 @@ class RateCardEstimator(Estimator):
                     royalty_type=royalty_type,
                     low=low,
                     high=high,
-                    rate_version=card.version,
-                    rate_effective_date=card.effective_date.isoformat(),
+                    rate_version=rep.version,
+                    rate_effective_date=rep.effective_date.isoformat(),
                     assumptions=item_assumptions,
                 )
             )
