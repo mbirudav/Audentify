@@ -1,0 +1,39 @@
+{
+  "status": "ok",
+  "results": [
+    {
+      "id": "9ff43b6a-4f16-427c-93c2-92307ca505e0",
+      "score": 0.98,
+      "recordings": [
+        {
+          "id": "8f3471b5-7e6a-48da-86a9-c1c07a0f47ae",
+          "title": "Never Gonna Give You Up",
+          "duration": 213,
+          "artists": [
+            {
+              "id": "0gxyHStUsqpMadRV0Di1Qt",
+              "name": "Rick Astley"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1c1c1c1c-2d2d-3e3e-4f4f-5a5a5a5a5a5a",
+      "score": 0.42,
+      "recordings": [
+        {
+          "id": "0d0d0d0d-1e1e-2f2f-3a3a-4b4b4b4b4b4b",
+          "title": "Never Gonna Give You Up (Live)",
+          "duration": 220,
+          "artists": [
+            {
+              "id": "0gxyHStUsqpMadRV0Di1Qt",
+              "name": "Rick Astley"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

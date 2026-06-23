@@ -1,0 +1,67 @@
+{
+  "isrc": {
+    "id": "GBARL9300135",
+    "recording-list": [
+      {
+        "id": "8f3471b5-7e6a-48da-86a9-c1c07a0f47ae",
+        "title": "Never Gonna Give You Up",
+        "length": "213573",
+        "work-relation-list": [
+          {
+            "type": "performance",
+            "type-id": "a3005666-a872-32c3-ad06-98af558e99b0",
+            "target": "f5cdd40d-6dc3-358b-8d7d-22dd9d8f87a8",
+            "direction": "forward",
+            "work": {
+              "id": "f5cdd40d-6dc3-358b-8d7d-22dd9d8f87a8",
+              "title": "Never Gonna Give You Up",
+              "type": "Song"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "works": {
+    "f5cdd40d-6dc3-358b-8d7d-22dd9d8f87a8": {
+      "id": "f5cdd40d-6dc3-358b-8d7d-22dd9d8f87a8",
+      "title": "Never Gonna Give You Up",
+      "type": "Song",
+      "iswc-list": ["T-010.140.236-1"],
+      "artist-relation-list": [
+        {
+          "type": "composer",
+          "type-id": "d59d99ea-23d4-4a80-b066-edca32ee158f",
+          "direction": "backward",
+          "artist": {
+            "id": "5e2a5d35-6fd8-4f50-a1d9-3e1b3a9f5b9a",
+            "name": "Mike Stock",
+            "sort-name": "Stock, Mike",
+            "ipi-list": ["00150394842"]
+          }
+        },
+        {
+          "type": "composer",
+          "type-id": "d59d99ea-23d4-4a80-b066-edca32ee158f",
+          "direction": "backward",
+          "artist": {
+            "id": "7c3a1e2b-9b1d-4f4c-8b1a-2c3d4e5f6a7b",
+            "name": "Matt Aitken",
+            "sort-name": "Aitken, Matt",
+            "ipi-list": ["00150394941"]
+          }
+        },
+        {
+          "type": "lyricist",
+          "type-id": "3e48faba-ec01-47fd-8e89-30e81161661c",
+          "direction": "backward",
+          "artist": {
+            "id": "9d8c7b6a-5e4f-3d2c-1b0a-9f8e7d6c5b4a",
+            "name": "Pete Waterman",
+            "sort-name": "Waterman, Pete"
+          }
+        }
+      ]
+    }
+  }
+}
