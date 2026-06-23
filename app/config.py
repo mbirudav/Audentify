@@ -32,6 +32,15 @@ class Settings(BaseSettings):
     musicbrainz_user_agent: str = "Audentify/0.1 (maruthibirudavolu@gmail.com)"
     musicbrainz_rate_limit_per_sec: float = 1.0
 
+    # --- Network master switch -------------------------------------------------------
+    # OFF by default so tests and CI NEVER hit the network and no scraper runs by
+    # accident. Every external caller (Spotify/MusicBrainz/AcoustID clients, the Stage 2
+    # registry HTTP client) must check this before making a real request and raise a clear
+    # "live network disabled" error when it's False. Flipping it on is a deliberate, manual
+    # act — and even then, registry ToS may prohibit automated access (see CLAUDE.md /
+    # PLAN.md "Risks"): the flag protects us technically, not legally.
+    allow_live_network: bool = False
+
     # --- App ---
     app_name: str = "Audentify"
     debug: bool = False
