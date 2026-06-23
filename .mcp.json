@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "postgres-dev": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["postgres-mcp", "--access-mode", "restricted", "--transport", "stdio", "${DATABASE_URL}"]
+    }
+  }
+}
