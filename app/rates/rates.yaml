@@ -1,0 +1,43 @@
+# Seed for the versioned RateCard table — NOT the source of truth.
+# A loader (Phase 2) upserts these rows; the DB table is canonical so a past estimate can be
+# reproduced at the rate that was effective then. Every row carries version + effective_date.
+#
+# NOTE: the numbers below are PLACEHOLDERS to exercise the schema. Real CRB statutory /
+# PRO / MLC schedules go in during Phase 2 with sources cited.
+
+rates:
+  - royalty_type: mechanical          # composition, per-stream (MLC)
+    registry: mlc
+    version: "2024-placeholder"
+    effective_date: "2024-01-01"
+    rate: 0.000_5
+    unit: per_stream
+    currency: USD
+    notes: "PLACEHOLDER — replace with CRB Phonorecords IV streaming mechanical."
+
+  - royalty_type: performance         # composition, per-stream approximation (PRO)
+    registry: ascap
+    version: "2024-placeholder"
+    effective_date: "2024-01-01"
+    rate: 0.000_3
+    unit: per_stream
+    currency: USD
+    notes: "PLACEHOLDER — PRO performance is a pooled/survey distribution; this is an approximation."
+
+  - royalty_type: performance
+    registry: bmi
+    version: "2024-placeholder"
+    effective_date: "2024-01-01"
+    rate: 0.000_3
+    unit: per_stream
+    currency: USD
+    notes: "PLACEHOLDER."
+
+  - royalty_type: digital_performance # master, per-play non-interactive (SoundExchange)
+    registry: soundexchange
+    version: "2024-placeholder"
+    effective_date: "2024-01-01"
+    rate: 0.001_0
+    unit: per_play
+    currency: USD
+    notes: "PLACEHOLDER — SoundExchange per-play, non-interactive only."
