@@ -1,0 +1,25 @@
+{
+  "query": {"title": "Test Track", "writer": "Jane Writer"},
+  "works": [
+    {
+      "title": "Test Track",
+      "bmiWorkId": "00000001",
+      "iswc": "T-123.456.789-0",
+      "writers": [
+        {"name": "Jane Writer", "ipi": "00000000250", "role": "Composer/Author"}
+      ],
+      "publishers": [
+        {"name": "Indie Publishing", "ipi": "00000000999"}
+      ]
+    },
+    {
+      "title": "Test Track (Remix)",
+      "bmiWorkId": "00000002",
+      "iswc": "T-222.222.222-2",
+      "writers": [
+        {"name": "Jane Writer", "ipi": "00000000250", "role": "Composer/Author"}
+      ],
+      "publishers": []
+    }
+  ]
+}

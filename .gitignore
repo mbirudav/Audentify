@@ -31,9 +31,12 @@ ENV/
 htmlcov/
 .cache/
 
-# --- Local scraper / response cache (provenance store stays in DB) ---
+# --- Local scraper / response cache ---
+# Ignore cached registry payloads written to disk at runtime, but TRACK the Python
+# source of the cache package (the durable provenance store lives in the DB).
 app/cache/*
 !app/cache/.gitkeep
+!app/cache/*.py
 
 # --- Alembic local overrides ---
 # (keep alembic.ini + versions/ tracked)

@@ -1,0 +1,25 @@
+{
+  "query": {"isrc": "US-S1Z-99-00001", "title": "Test Track"},
+  "results": [
+    {
+      "workTitle": "Test Track",
+      "iswc": "T-123.456.789-0",
+      "mlcSongCode": "TS0001",
+      "writers": [
+        {"name": "Jane Writer", "ipi": "00000000250", "role": "Composer/Author"}
+      ],
+      "recordings": [
+        {"isrc": "US-S1Z-99-00001", "artist": "Test Artist"}
+      ]
+    },
+    {
+      "workTitle": "Test Track (Acoustic)",
+      "iswc": "T-987.654.321-0",
+      "mlcSongCode": "TS0002",
+      "writers": [
+        {"name": "Jane Writer", "ipi": "00000000250", "role": "Composer/Author"}
+      ],
+      "recordings": []
+    }
+  ]
+}
