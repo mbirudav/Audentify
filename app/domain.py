@@ -2,16 +2,18 @@
 
 These are deliberately small and stable. They encode the bedrock distinction from
 CLAUDE.md: a recording is TWO copyrights (master vs composition), keyed and collected
-differently. Keep the enum values lowercase/stable — they become Postgres enum types
-and JSON wire values, so renaming a value is a migration, not a refactor.
+differently. We use StrEnum so a member IS its lowercase value (handy when building
+registry query strings), and models.py persists the .value (not the member NAME) — so the
+Postgres enum labels, the JSON wire values, and the enum value are all the same string.
+Renaming a value is therefore a migration, not a refactor.
 """
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class CopyrightSide(str, Enum):
+class CopyrightSide(StrEnum):
     """Which of the two copyrights a thing concerns.
 
     MASTER is keyed by ISRC; COMPOSITION is keyed by ISWC + writer IPI. This is the
@@ -23,7 +25,7 @@ class CopyrightSide(str, Enum):
     COMPOSITION = "composition"
 
 
-class RoyaltyType(str, Enum):
+class RoyaltyType(StrEnum):
     """Royalty streams. Each has a DIFFERENT rate base — never one flat formula.
 
     - MECHANICAL: composition, per-stream/per-unit, collected by the MLC.
@@ -36,7 +38,7 @@ class RoyaltyType(str, Enum):
     DIGITAL_PERFORMANCE = "digital_performance"
 
 
-class RegistryName(str, Enum):
+class RegistryName(StrEnum):
     """Collection societies / databases we check or estimate against."""
 
     MLC = "mlc"
@@ -46,7 +48,7 @@ class RegistryName(str, Enum):
     SOUNDEXCHANGE = "soundexchange"
 
 
-class RegistrationStatus(str, Enum):
+class RegistrationStatus(StrEnum):
     """Outcome of checking one identity against one registry.
 
     NOT_FOUND is the money signal (a candidate leak). AMBIGUOUS / UNRESOLVED exist so we
@@ -61,13 +63,13 @@ class RegistrationStatus(str, Enum):
     ERROR = "error"  # the check itself failed (scraper/network)
 
 
-class ConfidenceBand(str, Enum):
+class ConfidenceBand(StrEnum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
 
 
-class PartyRole(str, Enum):
+class PartyRole(StrEnum):
     """A party's role on a split. Writers/publishers sit on the composition side;
     performers/labels/distributors on the master side."""
 

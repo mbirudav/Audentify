@@ -14,8 +14,8 @@ import pytest
 
 from app.db.models import (
     Base,
-    RawRegistryResponse,
     RateCard,
+    RawRegistryResponse,
     RegistrationCheck,
     assert_splits_sum_to_100,
     splits_sum_to_100,

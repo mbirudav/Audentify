@@ -2,11 +2,11 @@
 
 Read CLAUDE.md "The two copyrights" first. The schema is composition-aware on purpose:
 
-    Party  --< Split >--  Work          (composition side: writers/publishers, keyed by ISWC + IPI)
-    Party  --< Split >--  Recording     (master side: performers/label, keyed by ISRC)
+    Party --< Split >-- Work        (composition side: writers/publishers; key ISWC + IPI)
+    Party --< Split >-- Recording   (master side: performers/label; key ISRC)
                               |
                               v
-                        embodies one Work   (nullable FK — work resolution can fail; degrade gracefully)
+                        embodies one Work   (nullable FK — work may be unresolved)
 
 A Split attaches to EXACTLY ONE parent (a Work XOR a Recording) — composition splits and
 master splits are different ownership and must not be conflated. Splits must sum to 100%
@@ -28,7 +28,6 @@ from sqlalchemy import (
     CheckConstraint,
     Date,
     DateTime,
-    Enum as SAEnum,
     ForeignKey,
     Integer,
     Numeric,
@@ -36,6 +35,9 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+)
+from sqlalchemy import (
+    Enum as SAEnum,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -48,16 +50,25 @@ from app.domain import (
     RoyaltyType,
 )
 
+
 # --- Shared Postgres enum type objects -------------------------------------------------
 # Define each SAEnum ONCE and reuse the instance across columns. If we instead inlined
 # `SAEnum(RegistryName, ...)` per column, SQLAlchemy would try to create the same PG enum
 # type multiple times. One instance per enum keeps a single canonical type.
-copyright_side_enum = SAEnum(CopyrightSide, name="copyright_side")
-royalty_type_enum = SAEnum(RoyaltyType, name="royalty_type")
-registry_name_enum = SAEnum(RegistryName, name="registry_name")
-registration_status_enum = SAEnum(RegistrationStatus, name="registration_status")
-confidence_band_enum = SAEnum(ConfidenceBand, name="confidence_band")
-party_role_enum = SAEnum(PartyRole, name="party_role")
+#
+# values_callable: by DEFAULT SQLAlchemy persists the enum MEMBER NAME (e.g. "MECHANICAL").
+# We override it to persist the .value ("mechanical") so the Postgres labels match the JSON
+# wire format and our StrEnum values — one canonical spelling everywhere.
+def _pg_enum(py_enum: type, name: str) -> SAEnum:
+    return SAEnum(py_enum, name=name, values_callable=lambda e: [m.value for m in e])
+
+
+copyright_side_enum = _pg_enum(CopyrightSide, "copyright_side")
+royalty_type_enum = _pg_enum(RoyaltyType, "royalty_type")
+registry_name_enum = _pg_enum(RegistryName, "registry_name")
+registration_status_enum = _pg_enum(RegistrationStatus, "registration_status")
+confidence_band_enum = _pg_enum(ConfidenceBand, "confidence_band")
+party_role_enum = _pg_enum(PartyRole, "party_role")
 
 # Percent columns: 0.00–100.00. Confidence scores: 0.0000–1.0000.
 PERCENT = Numeric(5, 2)
